@@ -5,10 +5,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: esphome/build-action@v1
+      - uses: actions/setup-python@v5
         with:
-        yaml_file: .github/workflows/water.yaml
+          python-version: '3.11'
+      - run: pip install esphome
+      - run: esphome compile .github/workflows/water.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: .esphome/build/water-meter/.pioenvs/water-meter/firmware.factory.bin
+          path: .github/workflows/.esphome/build/water-meter/.pioenvs/water-meter/firmware.factory.bin
