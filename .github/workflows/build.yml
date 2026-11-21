@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: esphome/build-action@v1
         with:
-          yaml_file: water.yaml
+        yaml_file: .github/workflows/water.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: firmware
