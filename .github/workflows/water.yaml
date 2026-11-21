@@ -9,29 +9,24 @@ esp32:
 
 logger:
 
-ota:
-  - platform: esphome
-
+# Плата сама раздает Wi-Fi (не зависит от роутера и не зависает при поиске сети)
 wifi:
-  ssid: "MTS_FREE"
-  password: "66668888"
+  ap:
+    ssid: "Water-Meter"
+    password: "12345678"
   output_power: 8.5dB
-  power_save_mode: none
 
-# Полностью автономный локальный интерфейс (работает без интернета)
 web_server:
   port: 80
   version: 2
   local: true
 
-# Энергонезависимая память для хранения литров
 globals:
   - id: total_liters
     type: float
     restore_value: yes
     initial_value: '0.0'
 
-# Датчик TCRT5000 на GPIO0 с защитой от дребезга
 binary_sensor:
   - platform: gpio
     name: "Состояние датчика"
@@ -46,30 +41,26 @@ binary_sensor:
     on_press:
       then:
         - lambda: |-
-            // 1 оборот = 1 литр (если 0.1 л — замени 1.0 на 0.1)
             id(total_liters) += 1.0;
-        - component.update: water_m3
-        - component.update: water_liters
+            ESP_LOGI("COUNTER", "Литров: %.1f", id(total_liters));
 
-# Показания на веб-странице
 sensor:
   - platform: template
-    id: water_m3
     name: "Показания счетчика (м³)"
     unit_of_measurement: "м³"
     accuracy_decimals: 3
+    update_interval: 1s
     lambda: |-
       return id(total_liters) / 1000.0;
 
   - platform: template
-    id: water_liters
     name: "Всего литров"
     unit_of_measurement: "л"
     accuracy_decimals: 1
+    update_interval: 1s
     lambda: |-
       return id(total_liters);
 
-# Поле на веб-странице для установки начальных показаний (в кубометрах)
 number:
   - platform: template
     name: "Установить показания (м³)"
@@ -83,5 +74,3 @@ number:
       then:
         - lambda: |-
             id(total_liters) = x * 1000.0;
-        - component.update: water_m3
-        - component.update: water_liters
