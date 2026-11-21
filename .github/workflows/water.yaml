@@ -9,23 +9,21 @@ esp32:
 
 logger:
 
-ota:
-  - platform: esphome
-
-wifi:
-  ssid: "MTS_FREE"
-  password: "ВАШ_ПАРОЛЬ_ОТ_WIFI"
-  output_power: 11dB
-
-web_server:
-  port: 80
-  version: 2
-  local: true
+globals:
+  - id: pulse_count
+    type: int
+    initial_value: '0'
 
 binary_sensor:
   - platform: gpio
     name: "Пин GPIO0"
     pin: { number: GPIO0, mode: { input: true, pulldown: true } }
+    on_press:
+      then:
+        - lambda: |-
+            id(pulse_count) += 1;
+            ESP_LOGI("COUNTER", "СРАБОТКА! Всего импульсов: %d", id(pulse_count));
+
   - platform: gpio
     name: "Пин GPIO1"
     pin: { number: GPIO1, mode: { input: true, pulldown: true } }
