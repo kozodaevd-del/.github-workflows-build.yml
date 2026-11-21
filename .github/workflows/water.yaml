@@ -14,42 +14,39 @@ ota:
 
 wifi:
   ssid: "MTS_FREE"
-  password: "66668888"
-  output_power: 15dB
+  password: "ВАШ_ПАРОЛЬ_ОТ_WIFI"
+  output_power: 11dB
 
 web_server:
   port: 80
   version: 2
   local: true
 
-globals:
-  - id: total_pulses
-    type: int
-    restore_value: yes
-    initial_value: '0'
-
 binary_sensor:
   - platform: gpio
-    name: "Датчик TCRT5000"
-    pin:
-      number: GPIO0
-      mode:
-        input: true
-        pulldown: true
-    filters:
-      - delayed_on: 30ms
-      - delayed_off: 30ms
-    on_press:
-      then:
-        - lambda: |-
-            id(total_pulses) += 1;
-        - component.update: pulse_sensor
-
-sensor:
-  - platform: template
-    id: pulse_sensor
-    name: "Всего импульсов"
-    unit_of_measurement: "имп"
-    accuracy_decimals: 0
-    lambda: |-
-      return id(total_pulses);
+    name: "Пин GPIO0"
+    pin: { number: GPIO0, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO1"
+    pin: { number: GPIO1, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO2"
+    pin: { number: GPIO2, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO3"
+    pin: { number: GPIO3, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO4"
+    pin: { number: GPIO4, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO5"
+    pin: { number: GPIO5, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO6"
+    pin: { number: GPIO6, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO7"
+    pin: { number: GPIO7, mode: { input: true, pulldown: true } }
+  - platform: gpio
+    name: "Пин GPIO10"
+    pin: { number: GPIO10, mode: { input: true, pulldown: true } }
