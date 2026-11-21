@@ -16,40 +16,16 @@ wifi:
   ssid: "MTS_FREE"
   password: "66668888"
 
+# Полностью автономный локальный веб-интерфейс
 web_server:
   port: 80
-  version: 3
+  version: 2
+  local: true
 
-# Глобальная переменная для хранения счетчика
-globals:
-  - id: total_pulses
-    type: int
-    restore_value: yes
-    initial_value: '0'
-
-# Живой статус датчика TCRT5000 на GPIO3
-binary_sensor:
-  - platform: gpio
-    name: "Датчик TCRT5000"
-    pin:
-      number: GPIO3
-      mode: INPUT
-      inverted: true
-    filters:
-      - delayed_on: 40ms
-      - delayed_off: 40ms
-    on_press:
-      then:
-        - lambda: |-
-            id(total_pulses) += 1;
-        - component.update: pulse_sensor
-
-# Счетчик импульсов на веб-странице
+# Смотрим реальное напряжение с датчика TCRT5000 на GPIO3
 sensor:
-  - platform: template
-    id: pulse_sensor
-    name: "Всего импульсов"
-    unit_of_measurement: "имп"
-    accuracy_decimals: 0
-    lambda: |-
-      return id(total_pulses);
+  - platform: adc
+    pin: GPIO3
+    name: "Напряжение датчика"
+    update_interval: 1s
+    attenuation: 12db
