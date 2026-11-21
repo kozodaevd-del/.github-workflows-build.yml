@@ -20,6 +20,14 @@ web_server:
   port: 80
   version: 3
 
+# Глобальная переменная для хранения счетчика
+globals:
+  - id: total_pulses
+    type: int
+    restore_value: yes
+    initial_value: '0'
+
+# Живой статус датчика TCRT5000 на GPIO3
 binary_sensor:
   - platform: gpio
     name: "Датчик TCRT5000"
@@ -30,14 +38,18 @@ binary_sensor:
     filters:
       - delayed_on: 40ms
       - delayed_off: 40ms
+    on_press:
+      then:
+        - lambda: |-
+            id(total_pulses) += 1;
+        - component.update: pulse_sensor
 
+# Счетчик импульсов на веб-странице
 sensor:
-  - platform: pulse_counter
-    pin:
-      number: GPIO3
-      mode: INPUT
-    name: "Расход (имп/мин)"
-    update_interval: 5s
-    total:
-      name: "Всего импульсов"
-      unit_of_measurement: "имп"
+  - platform: template
+    id: pulse_sensor
+    name: "Всего импульсов"
+    unit_of_measurement: "имп"
+    accuracy_decimals: 0
+    lambda: |-
+      return id(total_pulses);
