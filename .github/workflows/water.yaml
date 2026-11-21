@@ -1,0 +1,43 @@
+esphome:
+  name: water-meter
+  friendly_name: Счетчик воды
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+logger:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: "MTS_FREE"
+  password: "66668888"
+
+web_server:
+  port: 80
+  version: 3
+
+binary_sensor:
+  - platform: gpio
+    name: "Датчик TCRT5000"
+    pin:
+      number: GPIO3
+      mode: INPUT
+      inverted: true
+    filters:
+      - delayed_on: 40ms
+      - delayed_off: 40ms
+
+sensor:
+  - platform: pulse_counter
+    pin:
+      number: GPIO3
+      mode: INPUT
+    name: "Расход (имп/мин)"
+    update_interval: 5s
+    total:
+      name: "Всего импульсов"
+      unit_of_measurement: "имп"
