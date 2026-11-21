@@ -14,7 +14,7 @@ ota:
 
 wifi:
   ssid: "MTS_FREE"
-  password: "ВАШ_ПАРОЛЬ_ОТ_WIFI"
+  password: "66668888"
   output_power: 15dB
 
 web_server:
