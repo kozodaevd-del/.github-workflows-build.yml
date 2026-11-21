@@ -9,42 +9,79 @@ esp32:
 
 logger:
 
-globals:
-  - id: pulse_count
-    type: int
-    initial_value: '0'
+ota:
+  - platform: esphome
 
+wifi:
+  ssid: "MTS_FREE"
+  password: "66668888"
+  output_power: 8.5dB
+  power_save_mode: none
+
+# Полностью автономный локальный интерфейс (работает без интернета)
+web_server:
+  port: 80
+  version: 2
+  local: true
+
+# Энергонезависимая память для хранения литров
+globals:
+  - id: total_liters
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+# Датчик TCRT5000 на GPIO0 с защитой от дребезга
 binary_sensor:
   - platform: gpio
-    name: "Пин GPIO0"
-    pin: { number: GPIO0, mode: { input: true, pulldown: true } }
+    name: "Состояние датчика"
+    pin:
+      number: GPIO0
+      mode:
+        input: true
+        pulldown: true
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
     on_press:
       then:
         - lambda: |-
-            id(pulse_count) += 1;
-            ESP_LOGI("COUNTER", "СРАБОТКА! Всего импульсов: %d", id(pulse_count));
+            // 1 оборот = 1 литр (если 0.1 л — замени 1.0 на 0.1)
+            id(total_liters) += 1.0;
+        - component.update: water_m3
+        - component.update: water_liters
 
-  - platform: gpio
-    name: "Пин GPIO1"
-    pin: { number: GPIO1, mode: { input: true, pulldown: true } }
-  - platform: gpio
-    name: "Пин GPIO2"
-    pin: { number: GPIO2, mode: { input: true, pulldown: true } }
-  - platform: gpio
-    name: "Пин GPIO3"
-    pin: { number: GPIO3, mode: { input: true, pulldown: true } }
-  - platform: gpio
-    name: "Пин GPIO4"
-    pin: { number: GPIO4, mode: { input: true, pulldown: true } }
-  - platform: gpio
-    name: "Пин GPIO5"
-    pin: { number: GPIO5, mode: { input: true, pulldown: true } }
-  - platform: gpio
-    name: "Пин GPIO6"
-    pin: { number: GPIO6, mode: { input: true, pulldown: true } }
-  - platform: gpio
-    name: "Пин GPIO7"
-    pin: { number: GPIO7, mode: { input: true, pulldown: true } }
-  - platform: gpio
-    name: "Пин GPIO10"
-    pin: { number: GPIO10, mode: { input: true, pulldown: true } }
+# Показания на веб-странице
+sensor:
+  - platform: template
+    id: water_m3
+    name: "Показания счетчика (м³)"
+    unit_of_measurement: "м³"
+    accuracy_decimals: 3
+    lambda: |-
+      return id(total_liters) / 1000.0;
+
+  - platform: template
+    id: water_liters
+    name: "Всего литров"
+    unit_of_measurement: "л"
+    accuracy_decimals: 1
+    lambda: |-
+      return id(total_liters);
+
+# Поле на веб-странице для установки начальных показаний (в кубометрах)
+number:
+  - platform: template
+    name: "Установить показания (м³)"
+    min_value: 0
+    max_value: 99999
+    step: 0.001
+    unit_of_measurement: "м³"
+    mode: box
+    optimistic: true
+    set_action:
+      then:
+        - lambda: |-
+            id(total_liters) = x * 1000.0;
+        - component.update: water_m3
+        - component.update: water_liters
