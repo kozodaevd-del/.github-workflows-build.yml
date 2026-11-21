@@ -1,6 +1,6 @@
 esphome:
   name: water-meter
-  friendly_name: Счетчик воды
+  friendly_name: Счетчики воды (ХВС и ГВС)
 
 esp32:
   board: esp32-c3-devkitm-1
@@ -9,7 +9,7 @@ esp32:
 
 logger:
 
-# Плата сама раздает Wi-Fi (не зависит от роутера и не зависает при поиске сети)
+# Точка доступа платы (подключение без роутера: http://192.168.4.1)
 wifi:
   ap:
     ssid: "Water-Meter"
@@ -21,15 +21,21 @@ web_server:
   version: 2
   local: true
 
+# Энергонезависимая память для хранения литров ХВС и ГВС
 globals:
-  - id: total_liters
+  - id: cold_liters
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: hot_liters
     type: float
     restore_value: yes
     initial_value: '0.0'
 
+# Датчики TCRT5000 на GPIO0 (ХВС) и GPIO1 (ГВС)
 binary_sensor:
   - platform: gpio
-    name: "Состояние датчика"
+    name: "Датчик ХВС (GPIO0)"
     pin:
       number: GPIO0
       mode:
@@ -41,29 +47,61 @@ binary_sensor:
     on_press:
       then:
         - lambda: |-
-            id(total_liters) += 1.0;
-            ESP_LOGI("COUNTER", "Литров: %.1f", id(total_liters));
+            id(cold_liters) += 1.0;
 
+  - platform: gpio
+    name: "Датчик ГВС (GPIO1)"
+    pin:
+      number: GPIO1
+      mode:
+        input: true
+        pulldown: true
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+    on_press:
+      then:
+        - lambda: |-
+            id(hot_liters) += 1.0;
+
+# Показания на веб-странице http://192.168.4.1
 sensor:
   - platform: template
-    name: "Показания счетчика (м³)"
+    name: "ХВС (м³)"
     unit_of_measurement: "м³"
     accuracy_decimals: 3
     update_interval: 1s
     lambda: |-
-      return id(total_liters) / 1000.0;
+      return id(cold_liters) / 1000.0;
 
   - platform: template
-    name: "Всего литров"
+    name: "ХВС (литры)"
     unit_of_measurement: "л"
     accuracy_decimals: 1
     update_interval: 1s
     lambda: |-
-      return id(total_liters);
+      return id(cold_liters);
 
+  - platform: template
+    name: "ГВС (м³)"
+    unit_of_measurement: "м³"
+    accuracy_decimals: 3
+    update_interval: 1s
+    lambda: |-
+      return id(hot_liters) / 1000.0;
+
+  - platform: template
+    name: "ГВС (литры)"
+    unit_of_measurement: "л"
+    accuracy_decimals: 1
+    update_interval: 1s
+    lambda: |-
+      return id(hot_liters);
+
+# Поля ввода начальных показаний для ХВС и ГВС
 number:
   - platform: template
-    name: "Установить показания (м³)"
+    name: "Установить ХВС (м³)"
     min_value: 0
     max_value: 99999
     step: 0.001
@@ -73,4 +111,17 @@ number:
     set_action:
       then:
         - lambda: |-
-            id(total_liters) = x * 1000.0;
+            id(cold_liters) = x * 1000.0;
+
+  - platform: template
+    name: "Установить ГВС (м³)"
+    min_value: 0
+    max_value: 99999
+    step: 0.001
+    unit_of_measurement: "м³"
+    mode: box
+    optimistic: true
+    set_action:
+      then:
+        - lambda: |-
+            id(hot_liters) = x * 1000.0;
