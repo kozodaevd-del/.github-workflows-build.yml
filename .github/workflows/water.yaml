@@ -14,19 +14,42 @@ ota:
 
 wifi:
   ssid: "MTS_FREE"
-  password: "66668888"
+  password: "ВАШ_ПАРОЛЬ_ОТ_WIFI"
+  output_power: 15dB
 
 web_server:
   port: 80
   version: 2
   local: true
 
+globals:
+  - id: total_pulses
+    type: int
+    restore_value: yes
+    initial_value: '0'
+
 binary_sensor:
   - platform: gpio
     name: "Датчик TCRT5000"
     pin:
-      number: GPIO3
+      number: GPIO0
       mode:
         input: true
-        pullup: true
-      inverted: true
+        pulldown: true
+    filters:
+      - delayed_on: 30ms
+      - delayed_off: 30ms
+    on_press:
+      then:
+        - lambda: |-
+            id(total_pulses) += 1;
+        - component.update: pulse_sensor
+
+sensor:
+  - platform: template
+    id: pulse_sensor
+    name: "Всего импульсов"
+    unit_of_measurement: "имп"
+    accuracy_decimals: 0
+    lambda: |-
+      return id(total_pulses);
