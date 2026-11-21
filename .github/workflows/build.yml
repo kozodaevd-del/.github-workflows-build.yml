@@ -1,0 +1,14 @@
+name: Build ESPHome
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: esphome/build-action@v1
+        with:
+          yaml_file: water.yaml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: .esphome/build/water-meter/.pioenvs/water-meter/firmware.factory.bin
